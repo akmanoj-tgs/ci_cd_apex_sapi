@@ -66,10 +66,9 @@ jobs:
 
       - name: Deploy to CloudHub 2.0
         run: |
-          mvn deploy \
-          -DconnectedAppClientId=${{ secrets.ANYPOINT_CLIENT_ID }} \
-          -DconnectedAppClientSecret=${{ secrets.ANYPOINT_CLIENT_SECRET }} \
-          -DconnectedAppGrantType=client_credentials \
-          -Denvironment=${{ secrets.ENVIRONMENT }} \
-          -Dtarget=${{ secrets.TARGET }} \
-          -Dapp.name=${{ secrets.APP_NAME }}
+            mvn mule:deploy \
+            -DconnectedAppClientId=${{ secrets.ANYPOINT_CLIENT_ID }} \
+            -DconnectedAppClientSecret=${{ secrets.ANYPOINT_CLIENT_SECRET }} \
+            -Denvironment=${{ secrets.ENVIRONMENT }} \
+            -Dtarget=${{ secrets.TARGET }} \
+            -Dapp.name=${{ secrets.APP_NAME }}
