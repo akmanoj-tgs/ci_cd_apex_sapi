@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <http:listener-config name="apex-order-system-sapi-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8092" />
+    </http:listener-config>
+    <apikit:config name="apex-order-system-sapi-config" api="apex-order-system-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="SAPI_HTTP_Request_Config" doc:name="HTTP Request configuration" doc:id="49a81ec1-1cdd-44c5-b98c-5277d3ce54eb" >
+		<http:request-connection host="localhost" port="8092" />
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="f7904913-ce74-43b2-a1f0-8017a0fa12f6" >
+		<db:my-sql-connection host="sql12.freesqldatabase.com" port="3306" user="sql12836507" password="xiSjuT6Vps" database="sql12836507"/>
+	</db:config>
+	<flow name="apex-order-system-sapi-main">
+        <http:listener config-ref="apex-order-system-sapi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="apex-order-system-sapi-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="apex-order-system-sapi-console">
+        <http:listener config-ref="apex-order-system-sapi-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="apex-order-system-sapi-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\orders:apex-order-system-sapi-config">
+        <logger level="INFO" message="get:\orders:apex-order-system-sapi-config" />
+		<set-variable value='#[((attributes.queryParams.page default "1") as Number)]' doc:name="Page" doc:id="40d9b390-2e66-4f2d-81e4-28a103cb886b" variableName="page"/>
+		<set-variable value='#[((attributes.queryParams.pageSize default "20") as Number)]' doc:name="Page Size" doc:id="f48bed1e-29f0-40f8-967c-ee495079e520" variableName="pageSize"/>
+		<set-variable value="#[(vars.page - 1) * vars.pageSize]" doc:name="Calculate Offset" doc:id="f0262ad4-fe1e-4d76-8d2b-f4d7f4f549a5" variableName="offset"/>
+		<db:select doc:name="Count Total Orders" doc:id="ead0e38b-900d-4d6b-9aef-4078254914b9" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT COUNT(*) AS total
+FROM orders]]></db:sql>
+		</db:select>
+		<set-variable value="#[payload[0].total as Number]" doc:name="Total Orders" doc:id="686aadd2-6170-4d9c-a279-6681db2b956c" variableName="totalOrders"/>
+		<db:select doc:name="Get - Orders Page" doc:id="b587e1a9-ce85-454a-bb90-fe6bb5f542bb" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT
+    order_id,
+    customer_code,
+    subtotal,
+    tax,
+    shipping_fee,
+    grand_total,
+    carrier,
+    estimated_delivery_days,
+    status,
+    ingested_timestamp,
+    created_at,
+    updated_at
+FROM orders
+ORDER BY created_at DESC
+LIMIT :pageSize OFFSET :offset]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    pageSize: vars.pageSize as Number,
+    offset: vars.offset as Number
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="ff823606-2454-47f0-81df-1fb1380c879e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    page: vars.page,
+    pageSize: vars.pageSize,
+    total: vars.totalOrders,
+    orders: payload map ((order) -> {
+        orderId: order.order_id,
+        customerCode: order.customer_code,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        shippingFee: order.shipping_fee,
+        grandTotal: order.grand_total,
+        carrier: order.carrier,
+        estimatedDeliveryDays: order.estimated_delivery_days,
+        status: order.status,
+        ingestedTimestamp: order.ingested_timestamp
+    })
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5865c334-2519-45dd-bf20-36c3975db0f0" />
+    </flow>
+	<flow name="get:\orders\(orderId):apex-order-system-sapi-config">
+		<logger level="INFO" doc:name="Logger" doc:id="c349877a-13b7-4d41-ac76-c096201bc596" />
+		<set-variable value="#[attributes.headers.'x-correlation-id']" doc:name="Capture Correlation ID" doc:id="96df9d9d-bdd3-47a6-993b-4b8b1635f756" variableName="correlationId"/>
+		<ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="orderId">attributes.uriParams.'orderId'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <set-variable value="#[attributes.uriParams.'orderId']" doc:name="Set - OrderId" doc:id="51ea807a-155a-4119-8393-8a56eca12302" variableName="orderId"/>
+		<db:select doc:name="Get Order" doc:id="8099d8e9-7dd5-4995-88e7-7d789917655b" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT
+    order_id,
+    customer_code,
+    subtotal,
+    tax,
+    shipping_fee,
+    grand_total,
+    carrier,
+    estimated_delivery_days,
+    status,
+    ingested_timestamp,
+    created_at,
+    updated_at
+FROM orders
+WHERE order_id = :orderId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    orderId: vars.orderId
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Order Found or Not?" doc:id="65699d4d-d9ea-4d50-9e4a-57dc84fa4859" >
+			<when expression="#[!isEmpty(payload)]">
+				<set-variable value="#[payload[0]]" doc:name="Order Record" doc:id="19b49782-051d-46cf-8370-2c2a0679c5a2" variableName="orderRecord"/>
+				<db:select doc:name="Get Order Items" doc:id="bc36f514-c5b2-44f3-b571-64324b6b9e1d" config-ref="Database_Config">
+					<db:sql ><![CDATA[SELECT
+    sku,
+    quantity,
+    price,
+    subtotal
+FROM order_items
+WHERE order_id = :orderId
+ORDER BY order_item_id]]></db:sql>
+					<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    orderId: vars.orderId
+}]]]></db:input-parameters>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="4da3dce3-511d-4eb8-b1ff-7b5ff4ee5da7" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    orderId: vars.orderRecord.order_id,
+    customerCode: vars.orderRecord.customer_code,
+    subtotal: vars.orderRecord.subtotal,
+    tax: vars.orderRecord.tax,
+    shippingFee: vars.orderRecord.shipping_fee,
+    grandTotal: vars.orderRecord.grand_total,
+    carrier: vars.orderRecord.carrier,
+    estimatedDeliveryDays: vars.orderRecord.estimated_delivery_days,
+    status: vars.orderRecord.status,
+    ingestedTimestamp: vars.orderRecord.ingested_timestamp,
+    items: payload map ((item) -> {
+        sku: item.sku,
+        quantity: item.quantity,
+        price: item.price,
+        subtotal: item.subtotal
+    })
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Order Not Found" doc:id="26efd0a0-47a4-4dfe-a264-06e9b90bae67" type="APP:ORDER_NOT_FOUND" description='#[ "Order not found: " ++ vars.orderId ]'/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" message="get:\orders\(orderId):apex-order-system-sapi-config" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="Handles Order Not Found" doc:id="5d75c69f-78d4-4ccd-98bb-f62d3ae7aea5" type="APP:ORDER_NOT_FOUND">
+				<ee:transform doc:name="Transform Message" doc:id="3bc9edf1-e0f4-4b9e-8128-d8b66a09bae5" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    timestamp: now() as String,
+    correlationId: vars.correlationId default "",
+    errorCode: "APP:ORDER_NOT_FOUND",
+    message: error.description default ("Order not found: " ++ vars.orderId),
+    details: {}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="#[404]" doc:name="Set - HTTP 404 Status" doc:id="f7bcf924-653d-482a-8633-630959fce713" variableName="httpStatus"/>
+			</on-error-propagate>
+		</error-handler>
+    </flow>
+	<flow name="post:\orders:application\json:apex-order-system-sapi-config">
+        <logger level="INFO" message="post:\orders:application\json:apex-order-system-sapi-config" doc:name="Order Request Received"/>
+		<set-variable value="#[payload]" doc:name="Save Order Payload" doc:id="46ffd352-1d00-476d-b9b1-79fbc1b0c1bf" variableName="orderPayload" />
+		<set-variable value="#[attributes.headers.'Idempotency-Key']" doc:name="Capture Idempotency Key" doc:id="724cf69c-526a-4439-b182-32621cc00aab" variableName="idempotencyKey" />
+		<set-variable value="#[attributes.headers.'x-correlation-id']" doc:name="Capture Correlation ID" doc:id="889aeeee-8bc4-48b9-9efd-2ddcff3bd9d8" variableName="correlationId"/>
+		<db:select doc:name="Check Existing Idempotency Key" doc:id="ea1bd9ef-39a5-4b6a-9aec-82b24754ad0d" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT
+    idempotency_key,
+    order_id,
+    status,
+    response_payload
+FROM idempotency_keys
+WHERE idempotency_key = :idempotencyKey]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    idempotencyKey: vars.idempotencyKey
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Idempotency Check" doc:id="3e026f6e-3831-4b49-bdc3-d1a3e4963545">
+			<when expression="#[!isEmpty(payload)]">
+				<ee:transform doc:name="Transform Message" doc:id="4f646274-2870-474e-8a6a-40b345d8f434">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+read(payload[0].response_payload, "application/json")]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<try doc:name="Try" doc:id="d70e8e1e-2985-477f-ac49-7411d51267e2" transactionalAction="ALWAYS_BEGIN">
+			<db:insert doc:name="Save Order" doc:id="22329c81-f9a6-4622-9e67-89c394afc497" config-ref="Database_Config">
+			<db:sql><![CDATA[INSERT INTO orders (
+    order_id,
+    customer_code,
+    subtotal,
+    tax,
+    shipping_fee,
+    grand_total,
+    carrier,
+    estimated_delivery_days,
+    status,
+    ingested_timestamp,
+    created_at
+)
+VALUES (
+    :orderId,
+    :customerCode,
+    :subtotal,
+    :tax,
+    :shippingFee,
+    :grandTotal,
+    :carrier,
+    :estimatedDeliveryDays,
+    'CONFIRMED',
+    NOW(),
+    NOW()
+)]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    orderId: vars.orderPayload.orderId,
+    customerCode: vars.orderPayload.customerCode,
+    subtotal: vars.orderPayload.subtotal,
+    tax: vars.orderPayload.tax,
+    shippingFee: vars.orderPayload.shippingFee,
+    grandTotal: vars.orderPayload.grandTotal,
+    carrier: vars.orderPayload.carrier,
+    estimatedDeliveryDays: vars.orderPayload.estimatedDeliveryDays
+}]]]></db:input-parameters>
+		</db:insert>
+			<foreach doc:name="For Each - Process Order Items" doc:id="16b9b817-82a8-4234-85a2-df55031c060a" collection="#[vars.orderPayload.items]">
+			<set-variable value="#[payload]" doc:name="Current Item" doc:id="48e82edf-e4a7-4b70-a18f-64a95a1e9c03" variableName="itemPayload" />
+			<db:select doc:name="Check Inventory" doc:id="4c6c9f79-c672-4eab-bc9e-11439c60bd9d" config-ref="Database_Config">
+				<db:sql><![CDATA[SELECT sku, stock
+FROM inventory
+WHERE sku = :sku]]></db:sql>
+				<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    sku: vars.itemPayload.sku
+}]]]></db:input-parameters>
+			</db:select>
+			<choice doc:name="Stock Available?" doc:id="5a6defea-54c3-4225-a148-d1595990f433">
+				<when expression="#[sizeOf(payload) &gt; 0 and payload[0].stock &gt;= vars.itemPayload.quantity]">
+					<db:update doc:name="Reduce Stock - Success" doc:id="f994d1d7-1f5e-4202-9e59-2f5a16f86fa5" config-ref="Database_Config">
+						<db:sql><![CDATA[UPDATE inventory
+SET stock = stock - :quantity
+WHERE sku = :sku
+  AND stock >= :quantity]]></db:sql>
+						<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    sku: vars.itemPayload.sku,
+    quantity: vars.itemPayload.quantity
+}]]]></db:input-parameters>
+					</db:update>
+					<db:insert doc:name="Save Order Item" doc:id="797492cf-6c0f-472b-8d58-2a02d8c87d33" config-ref="Database_Config">
+				<db:sql><![CDATA[INSERT INTO order_items (
+    order_id,
+    sku,
+    quantity,
+    price,
+    subtotal
+)
+VALUES (
+    :orderId,
+    :sku,
+    :quantity,
+    :price,
+    :subtotal
+)]]></db:sql>
+				<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    orderId: vars.orderPayload.orderId,
+    sku: vars.itemPayload.sku,
+    quantity: vars.itemPayload.quantity,
+    price: vars.itemPayload.price,
+    subtotal: vars.itemPayload.subtotal
+}]]]></db:input-parameters>
+			</db:insert>
+				</when>
+				<otherwise>
+					<raise-error doc:name="Insufficient Stock" doc:id="645c0362-f442-4691-b386-049ad1518c85" type="APP:INSUFFICIENT_STOCK" description='#[ "Insufficient stock for " ++ vars.itemPayload.sku ]' />
+				</otherwise>
+			</choice>
+		</foreach>
+			<set-variable value="#[floor(vars.orderPayload.grandTotal / 10)]" doc:name="Calculate Loyalty Points" doc:id="2ef1d9cf-fd37-4bc3-a41e-a0ababa2a7e6" variableName="loyaltyPointsEarned"/>
+					<db:insert doc:name="Upsert Customer Loyalty" doc:id="0b78fe0b-a60a-491d-828d-a2fdfc59173f" config-ref="Database_Config">
+						<db:sql ><![CDATA[INSERT INTO customer_loyalty (
+    customer_code,
+    loyalty_points
+)
+VALUES (
+    :customerCode,
+    :points
+)
+ON DUPLICATE KEY UPDATE
+    loyalty_points = loyalty_points + VALUES(loyalty_points)]]></db:sql>
+						<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    customerCode: vars.orderPayload.customerCode,
+    points: vars.loyaltyPointsEarned
+}]]]></db:input-parameters>
+					</db:insert>
+					<ee:transform doc:name="Transform Message" doc:id="e9df07c4-afe7-4bad-a268-9dd3294ce329" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    orderId: vars.orderPayload.orderId,
+    customerCode: vars.orderPayload.customerCode,
+    status: "CONFIRMED",
+    subtotal: vars.orderPayload.subtotal,
+    tax: vars.orderPayload.tax,
+    shippingFee: vars.orderPayload.shippingFee,
+    grandTotal: vars.orderPayload.grandTotal,
+    carrier: vars.orderPayload.carrier,
+    estimatedDeliveryDays: vars.orderPayload.estimatedDeliveryDays,
+    loyaltyPointsEarned: vars.loyaltyPointsEarned,
+    items: vars.orderPayload.items
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<set-variable value="#[payload]" doc:name="Build and Save Final Response" doc:id="85f0f727-0b94-4ed8-a312-b81f5aa2b47c" variableName="finalResponse"/>
+					<db:insert doc:name="Save Idempotency Result" doc:id="cc72d9c7-8eb2-4fa1-8f8d-76ad50b817a7" config-ref="Database_Config">
+						<db:sql ><![CDATA[INSERT INTO idempotency_keys (
+    idempotency_key,
+    order_id,
+    status,
+    response_payload,
+    created_at
+)
+VALUES (
+    :idempotencyKey,
+    :orderId,
+    :status,
+    :responsePayload,
+    NOW()
+)]]></db:sql>
+						<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    idempotencyKey: vars.idempotencyKey,
+    orderId: vars.orderPayload.orderId,
+    status: "SUCCESS",
+    responsePayload: write(vars.finalResponse, "application/json")
+}]]]></db:input-parameters>
+					</db:insert>
+					<ee:transform doc:name="Transform Message" doc:id="7f7ed6c8-53e3-4fc1-9c8e-584cf7deb180" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.finalResponse]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+		</try>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="11b289cb-7424-4945-a360-48fb42d96ad0">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0ea5363c-2c8b-4182-9771-a806653ce599" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="de05d5b8-58a6-43f5-a7e2-1cd8ba6bafa8" type="APP:INSUFFICIENT_STOCK">
+				<ee:transform doc:name="Transform Message" doc:id="32d020e1-77c6-45d0-8247-44dee7574cc0" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    timestamp: now() as String,
+    correlationId: vars.correlationId default "",
+    errorCode: "APP:INSUFFICIENT_STOCK",
+    message: error.description default "Insufficient stock",
+    details: {}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="#[422]" doc:name="HTTP 422 Status" doc:id="19df041c-fb5c-42bb-92b9-f79802994f3e" variableName="httpStatus"/>
+			</on-error-propagate>
+		</error-handler>
+    </flow>
+</mule>

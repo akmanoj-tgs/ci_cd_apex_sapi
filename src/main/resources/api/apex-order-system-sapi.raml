@@ -1,0 +1,264 @@
+#%RAML 1.0
+
+title: Apex Order System API
+description: Single System API providing database-backed order operations for the order orchestration solution.
+version: v1
+baseUri: https://internal.apexretail.com/order-system/v1
+mediaType: application/json
+
+
+traits:
+
+  correlation-id:
+    headers:
+      x-correlation-id:
+        type: string
+        required: true
+        description: Correlation identifier propagated across the API layers.
+
+  pageable:
+    queryParameters:
+      page:
+        type: integer
+        minimum: 1
+        default: 1
+        required: false
+        description: Page number to retrieve.
+
+      pageSize:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+        required: false
+        description: Number of orders to return per page.
+
+  standard-errors:
+    responses:
+
+      400:
+        description: Invalid request.
+        body:
+          application/json:
+            type: ErrorResponse
+
+      404:
+        description: Order was not found.
+        body:
+          application/json:
+            type: ErrorResponse
+
+      422:
+        description: Database or business validation failure.
+        body:
+          application/json:
+            type: ErrorResponse
+
+      500:
+        description: Internal server error.
+        body:
+          application/json:
+            type: ErrorResponse
+
+
+types:
+
+  SystemOrderItem:
+    type: object
+    properties:
+      sku:
+        type: string
+      quantity:
+        type: integer
+      price:
+        type: number
+      subtotal:
+        type: number
+
+
+  SystemAddress:
+    type: object
+    properties:
+      street:
+        type: string
+      city:
+        type: string
+      state:
+        type: string
+      postalCode:
+        type: string
+      country:
+        type: string
+
+
+  SystemOrderRequest:
+    type: object
+    properties:
+      orderId:
+        type: string
+      customerCode:
+        type: string
+      subtotal:
+        type: number
+      tax:
+        type: number
+      shippingFee:
+        type: number
+      grandTotal:
+        type: number
+      carrier:
+        type: string
+      estimatedDeliveryDays:
+        type: integer
+      items:
+        type: SystemOrderItem[]
+
+
+  SystemOrderResponse:
+    type: object
+    properties:
+      dbStatus:
+        type: string
+      transactionId:
+        type: string
+      rowsAffected:
+        type: integer
+      loyaltyPointsAwarded:
+        type: integer
+
+
+  StoredOrder:
+    type: object
+    properties:
+      orderId:
+        type: string
+      customerId:
+        type: string
+      status:
+        type: string
+      currency:
+        type: string
+      subtotal:
+        type: number
+      tax:
+        type: number
+      shippingCost:
+        type: number
+      grandTotal:
+        type: number
+      assignedCarrier:
+        type: string
+      estimatedDeliveryDays:
+        type: integer
+      loyaltyPointsEarned:
+        type: integer
+      items:
+        type: SystemOrderItem[]
+      shippingAddress:
+        type: SystemAddress
+      consignmentId:
+        type: string
+
+
+  OrderListResponse:
+    type: object
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      totalRecords:
+        type: integer
+      totalPages:
+        type: integer
+      orders:
+        type: StoredOrder[]
+
+
+  ErrorDetail:
+    type: object
+    properties:
+      sku:
+        type: string
+        required: false
+      requestedQuantity:
+        type: integer
+        required: false
+      availableQuantity:
+        type: integer
+        required: false
+
+
+  ErrorResponse:
+    type: object
+    properties:
+      timestamp:
+        type: string
+      correlationId:
+        type: string
+      errorCode:
+        type: string
+      errorMessage:
+        type: string
+      details:
+        type: ErrorDetail[]
+        required: false
+
+
+/orders:
+
+  get:
+    description: Retrieve a paginated collection of orders from the database.
+    is:
+      - correlation-id
+      - standard-errors
+      - pageable
+
+    responses:
+
+      200:
+        description: Orders retrieved successfully.
+        body:
+          application/json:
+            type: OrderListResponse
+
+
+  post:
+    description: Persist a completed order and execute the required transactional database operations.
+    is:
+      - correlation-id
+      - standard-errors
+
+    body:
+      application/json:
+        type: SystemOrderRequest
+
+    responses:
+
+      201:
+        description: Order successfully persisted.
+        body:
+          application/json:
+            type: SystemOrderResponse
+
+
+/orders/{orderId}:
+
+  uriParameters:
+    orderId:
+      type: string
+      description: Unique identifier of the order.
+
+  get:
+    description: Retrieve a single order from the database by order ID.
+    is:
+      - correlation-id
+      - standard-errors
+
+    responses:
+
+      200:
+        description: Order retrieved successfully.
+        body:
+          application/json:
+            type: StoredOrder
