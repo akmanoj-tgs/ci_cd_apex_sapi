@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="apex-order-system-sapi-suite.xml" />
+	<munit:test name="get:\orders:apex-order-system-sapi-config-test" doc:id="adf33297-97b9-45c5-8fcb-45d09110bb38" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="c58ad020-9fc5-4d55-8680-b1fd216edfed" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://getordersapexordersystemsapiconfigtest\set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://getordersapexordersystemsapiconfigtest\set-event_attributes.dwl')]" />
+				<munit:variables >
+					<munit:variable key="outboundHeaders" value="#[readUrl('classpath://getordersapexordersystemsapiconfigtest\set-event_variable_.dwl')]" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\orders:apex-order-system-sapi-config" doc:id="d4eed7e2-506c-4aa6-a166-5d1f5a272ee7" name="get:\orders:apex-order-system-sapi-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="5dd05edf-0a4a-43db-887c-5a0f28f0f29a" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getordersapexordersystemsapiconfigtest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify Count Total Orders" doc:id="7cdcc089-1ca7-45d6-8940-f4613d2d9604" processor="db:select" times="1">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute whereValue="ead0e38b-900d-4d6b-9aef-4078254914b9" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify Logger" doc:id="ca240ab9-f92b-4b3f-9bd8-e04c2f5c2d1a" processor="logger" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5865c334-2519-45dd-bf20-36c3975db0f0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get:\orders\(orderId):apex-order-system-sapi-config-test" doc:id="057a6a96-26f0-45a0-ae76-0532b0482a33" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Get Order" doc:id="036f1713-714c-4088-9dc6-110e603d78ef" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="8099d8e9-7dd5-4995-88e7-7d789917655b" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/java --- readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_payload.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="outboundHeaders" value="#[readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_variable_.dwl')]" />
+						<munit-tools:variable key="orderId" value="#[output application/java --- readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_variable_1.dwl')]" mediaType="application/java" encoding="UTF-8" />
+						<munit-tools:variable key="correlationId" value="#[output application/java --- readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_variable_2.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Get Order Items" doc:id="96b784ae-6cba-4f66-87e3-80e2aff9d9ea" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="bc36f514-c5b2-44f3-b571-64324b6b9e1d" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/java --- readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_payload1.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="outboundHeaders" value="#[readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_variable_3.dwl')]" />
+						<munit-tools:variable key="orderId" value="#[output application/java --- readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_variable_4.dwl')]" mediaType="application/java" encoding="UTF-8" />
+						<munit-tools:variable key="correlationId" value="#[output application/java --- readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_variable_5.dwl')]" mediaType="application/java" encoding="UTF-8" />
+						<munit-tools:variable key="orderRecord" value="#[output application/java --- readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\mock_variable_6.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="d4b0de58-346e-4282-8619-9416dd43746c" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\set-event_attributes.dwl')]" />
+				<munit:variables >
+					<munit:variable key="outboundHeaders" value="#[readUrl('classpath://getordersorderIdapexordersystemsapiconfigtest\set-event_variable_.dwl')]" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\orders\(orderId):apex-order-system-sapi-config" doc:id="7ce8c0a4-ec86-4b36-a038-f047b0ed3edc" name="get:\orders\(orderId):apex-order-system-sapi-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="ed8ac501-ef6a-4f21-9cb1-3e9c07dbf8f5" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getordersorderIdapexordersystemsapiconfigtest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify Logger" doc:id="03df5d51-bf32-4956-8381-e7a581ce4499" processor="logger" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="328e51d9-000b-40be-abcf-2190d4a27488" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
