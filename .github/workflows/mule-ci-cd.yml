@@ -3,7 +3,7 @@ name: Mule CI-CD Pipeline
 on:
   push:
     branches:
-      - main
+      - master
 
   workflow_dispatch:
 
