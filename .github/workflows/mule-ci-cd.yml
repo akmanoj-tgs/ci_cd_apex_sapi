@@ -1,0 +1,75 @@
+name: Mule CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+
+  build-test-package:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-
+
+      - name: Build
+        run: mvn clean
+
+      - name: Execute MUnit Tests
+        run: mvn test
+
+      - name: Package Application
+        run: mvn package
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mule-application
+          path: target/*.jar
+
+  deploy:
+
+    needs: build-test-package
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Deploy to CloudHub 2.0
+        run: |
+          mvn deploy \
+          -DconnectedAppClientId=${{ secrets.ANYPOINT_CLIENT_ID }} \
+          -DconnectedAppClientSecret=${{ secrets.ANYPOINT_CLIENT_SECRET }} \
+          -DconnectedAppGrantType=client_credentials \
+          -Denvironment=${{ secrets.ENVIRONMENT }} \
+          -Dtarget=${{ secrets.TARGET }} \
+          -Dapp.name=${{ secrets.APP_NAME }}

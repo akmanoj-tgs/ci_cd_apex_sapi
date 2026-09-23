@@ -278,7 +278,7 @@ output application/json
 				<raise-error doc:name="Order Not Found" doc:id="26efd0a0-47a4-4dfe-a264-06e9b90bae67" type="APP:ORDER_NOT_FOUND" description='#[ "Order not found: " ++ vars.orderId ]'/>
 			</otherwise>
 		</choice>
-		<logger level="INFO" message="get:\orders\(orderId):apex-order-system-sapi-config" />
+		<logger level="INFO" message="get:\orders\(orderId):apex-order-system-sapi-config" doc:id="328e51d9-000b-40be-abcf-2190d4a27488"/>
 		<error-handler >
 			<on-error-propagate enableNotifications="true" logException="true" doc:name="Handles Order Not Found" doc:id="5d75c69f-78d4-4ccd-98bb-f62d3ae7aea5" type="APP:ORDER_NOT_FOUND">
 				<ee:transform doc:name="Transform Message" doc:id="3bc9edf1-e0f4-4b9e-8128-d8b66a09bae5" >

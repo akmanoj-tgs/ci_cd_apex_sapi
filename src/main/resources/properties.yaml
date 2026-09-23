@@ -1,0 +1,5 @@
+db:
+    host: sql12.freesqldatabase.com
+    port: "3306"
+    database: sql12836507
+    username: sql12836507
