@@ -16,7 +16,7 @@
 		<mule.maven.plugin.version>4.10.1</mule.maven.plugin.version>
 		<app.name>apex-sapi-app</app.name>
 		<environment>Sandbox</environment>
-		<target>Cloudhub-US-East-1</target>
+		<target>Cloudhub-US-East-2</target>
 		<munit.version>3.7.3</munit.version>
 	</properties>
 
@@ -40,6 +40,7 @@
 						<connectedAppClientSecret>${connectedAppClientSecret}</connectedAppClientSecret>
 						<connectedAppGrantType>client_credentials</connectedAppGrantType>
 						<environment>${environment}</environment>
+						<muleVersion>${app.runtime}</muleVersion>
 						<target>${target}</target>
 						<applicationName>${app.name}</applicationName>
 						<replicas>1</replicas>
