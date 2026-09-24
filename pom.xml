@@ -1,168 +1,495 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>b8e657ef-106e-4cdc-aad5-e2050ef60266</groupId>
-	<artifactId>apex-sapi-app</artifactId>
-	<version>1.0.0</version>
-	<packaging>mule-application</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="
+           http://maven.apache.org/POM/4.0.0
+           https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<name>apex-sapi-app</name>
+    <modelVersion>4.0.0</modelVersion>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<app.runtime>4.12.3</app.runtime>
-		<mule.maven.plugin.version>4.10.1</mule.maven.plugin.version>
-		<app.name>apex-sapi-app</app.name>
-		<environment>Sandbox</environment>
-		<target>Cloudhub-US-East-2</target>
-		<munit.version>3.7.3</munit.version>
-	</properties>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<version>3.2.0</version>
-			</plugin>
-			<plugin>
-				<groupId>org.mule.tools.maven</groupId>
-				<artifactId>mule-maven-plugin</artifactId>
-				<version>${mule.maven.plugin.version}</version>
-				<extensions>true</extensions>
-				<configuration>
-					<cloudhub2Deployment>
-						<uri>https://anypoint.mulesoft.com</uri>
-						<provider>MC</provider>
-						<connectedAppClientId>${connectedAppClientId}</connectedAppClientId>
-						<connectedAppClientSecret>${connectedAppClientSecret}</connectedAppClientSecret>
-						<connectedAppGrantType>client_credentials</connectedAppGrantType>
-						<environment>${environment}</environment>
-						<muleVersion>${app.runtime}</muleVersion>
-						<target>${target}</target>
-						<applicationName>${app.name}</applicationName>
-						<replicas>1</replicas>
-						<vCores>0.1</vCores>
-					</cloudhub2Deployment>
-					<sharedLibraries>
-						<sharedLibrary>
-							<groupId>mysql</groupId>
-							<artifactId>mysql-connector-java</artifactId>
-						</sharedLibrary>
-					</sharedLibraries>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.mulesoft.munit.tools</groupId>
-				<artifactId>munit-maven-plugin</artifactId>
-				<version>${munit.version}</version>
-				<executions>
-					<execution>
-						<id>test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>test</goal>
-							<goal>coverage-report</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<coverage>
-						<runCoverage>true</runCoverage>
-						<formats>
-							<format>html</format>
-						</formats>
-					</coverage>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+    <!-- =========================================================
+         PROJECT INFORMATION
+         ========================================================= -->
 
-	<dependencies>
-		<dependency>
-			<groupId>org.mule.connectors</groupId>
-			<artifactId>mule-http-connector</artifactId>
-			<version>1.12.1</version>
-			<classifier>mule-plugin</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.mule.connectors</groupId>
-			<artifactId>mule-sockets-connector</artifactId>
-			<version>1.2.9</version>
-			<classifier>mule-plugin</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.mule.modules</groupId>
-			<artifactId>mule-apikit-module</artifactId>
-			<version>1.12.5</version>
-			<classifier>mule-plugin</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.mule.connectors</groupId>
-			<artifactId>mule-db-connector</artifactId>
-			<version>1.16.4</version>
-			<classifier>mule-plugin</classifier>
-		</dependency>
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.30</version>
-		</dependency>
-		<dependency>
-			<groupId>com.mulesoft.modules</groupId>
-			<artifactId>mule-secure-configuration-property-module</artifactId>
-			<version>1.3.2</version>
-			<classifier>mule-plugin</classifier>
-		</dependency>
-		<dependency>
-			<groupId>com.mulesoft.munit</groupId>
-			<artifactId>munit-runner</artifactId>
-			<version>3.7.3</version>
-			<classifier>mule-plugin</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.mulesoft.munit</groupId>
-			<artifactId>munit-tools</artifactId>
-			<version>3.7.3</version>
-			<classifier>mule-plugin</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mule.weave</groupId>
-			<artifactId>assertions</artifactId>
-			<version>1.2.1</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+    <groupId>b8e657ef-106e-4cdc-aad5-e2050ef60266</groupId>
 
-	<repositories>
-		<repository>
-			<id>anypoint-exchange-v3</id>
-			<name>Anypoint Exchange</name>
-			<url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
-			<layout>default</layout>
-		</repository>
-		<repository>
-			<id>mulesoft-releases</id>
-			<name>MuleSoft Releases Repository</name>
-			<url>https://repository.mulesoft.org/nexus/repository/releases/</url>
-			<layout>default</layout>
-		</repository>
-	</repositories>
+    <artifactId>apex-sapi-app</artifactId>
 
-	<pluginRepositories>
-		<pluginRepository>
-			<id>mulesoft-releases</id>
-			<name>MuleSoft Releases Repository</name>
-			<layout>default</layout>
-			<url>https://repository.mulesoft.org/nexus/repository/releases/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
+    <!--
+        For Sandbox CI/CD we use SNAPSHOT.
+
+        Exchange allows SNAPSHOT assets to be overwritten,
+        which is useful for repeated CI/CD deployments.
+    -->
+    <version>1.0.0-SNAPSHOT</version>
+
+    <packaging>mule-application</packaging>
+
+    <name>apex-sapi-app</name>
+
+    <description>
+        Apex Order System SAPI Mule Application
+    </description>
+
+
+    <!-- =========================================================
+         PROPERTIES
+         ========================================================= -->
+
+    <properties>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Mule Runtime -->
+        <app.runtime>4.12.3</app.runtime>
+
+        <!-- Mule Maven Plugin -->
+        <mule.maven.plugin.version>4.10.1</mule.maven.plugin.version>
+
+        <!-- Application name -->
+        <app.name>apex-sapi-app</app.name>
+
+        <!-- CloudHub 2.0 Environment -->
+        <environment>Sandbox</environment>
+
+        <!-- CloudHub 2.0 Target -->
+        <target>Cloudhub-US-East-2</target>
+
+        <!-- MUnit -->
+        <munit.version>3.7.3</munit.version>
+
+    </properties>
+
+
+    <!-- =========================================================
+         DISTRIBUTION MANAGEMENT
+         
+         This tells Maven WHERE to publish the Mule application
+         when "mvn deploy" is executed.
+
+         This is Anypoint Exchange's Maven Facade.
+         ========================================================= -->
+
+    <distributionManagement>
+
+        <repository>
+
+            <id>anypoint-exchange-v3</id>
+
+            <name>Anypoint Exchange</name>
+
+            <url>
+                https://maven.anypoint.mulesoft.com/api/v3/organizations/b8e657ef-106e-4cdc-aad5-e2050ef60266/maven
+            </url>
+
+            <layout>default</layout>
+
+        </repository>
+
+    </distributionManagement>
+
+
+    <!-- =========================================================
+         BUILD
+         ========================================================= -->
+
+    <build>
+
+        <plugins>
+
+
+            <!-- =================================================
+                 CLEAN PLUGIN
+                 ================================================= -->
+
+            <plugin>
+
+                <groupId>org.apache.maven.plugins</groupId>
+
+                <artifactId>maven-clean-plugin</artifactId>
+
+                <version>3.2.0</version>
+
+            </plugin>
+
+
+            <!-- =================================================
+                 MULE MAVEN PLUGIN
+                 
+                 Handles:
+                 - Mule application packaging
+                 - Exchange publishing
+                 - CloudHub 2.0 deployment
+                 ================================================= -->
+
+            <plugin>
+
+                <groupId>org.mule.tools.maven</groupId>
+
+                <artifactId>mule-maven-plugin</artifactId>
+
+                <version>${mule.maven.plugin.version}</version>
+
+                <extensions>true</extensions>
+
+                <configuration>
+
+
+                    <!-- =========================================
+                         EXCHANGE ASSET TYPE
+
+                         This identifies the artifact as a
+                         Mule application in Exchange.
+                         ========================================= -->
+
+                    <classifier>mule-application</classifier>
+
+
+                    <!-- =========================================
+                         CLOUDHUB 2.0 DEPLOYMENT
+                         ========================================= -->
+
+                    <cloudhub2Deployment>
+
+                        <uri>
+                            https://anypoint.mulesoft.com
+                        </uri>
+
+                        <provider>MC</provider>
+
+                        <connectedAppClientId>
+                            ${connectedAppClientId}
+                        </connectedAppClientId>
+
+                        <connectedAppClientSecret>
+                            ${connectedAppClientSecret}
+                        </connectedAppClientSecret>
+
+                        <connectedAppGrantType>
+                            client_credentials
+                        </connectedAppGrantType>
+
+                        <environment>
+                            ${environment}
+                        </environment>
+
+                        <muleVersion>
+                            ${app.runtime}
+                        </muleVersion>
+
+                        <target>
+                            ${target}
+                        </target>
+
+                        <applicationName>
+                            ${app.name}
+                        </applicationName>
+
+                        <replicas>
+                            1
+                        </replicas>
+
+                        <vCores>
+                            0.1
+                        </vCores>
+
+                    </cloudhub2Deployment>
+
+
+                    <!-- =========================================
+                         MYSQL SHARED LIBRARY
+                         ========================================= -->
+
+                    <sharedLibraries>
+
+                        <sharedLibrary>
+
+                            <groupId>mysql</groupId>
+
+                            <artifactId>mysql-connector-java</artifactId>
+
+                        </sharedLibrary>
+
+                    </sharedLibraries>
+
+                </configuration>
+
+            </plugin>
+
+
+            <!-- =================================================
+                 MUNIT
+                 ================================================= -->
+
+            <plugin>
+
+                <groupId>com.mulesoft.munit.tools</groupId>
+
+                <artifactId>munit-maven-plugin</artifactId>
+
+                <version>${munit.version}</version>
+
+                <executions>
+
+                    <execution>
+
+                        <id>test</id>
+
+                        <phase>test</phase>
+
+                        <goals>
+
+                            <goal>test</goal>
+
+                            <goal>coverage-report</goal>
+
+                        </goals>
+
+                    </execution>
+
+                </executions>
+
+                <configuration>
+
+                    <coverage>
+
+                        <runCoverage>true</runCoverage>
+
+                        <formats>
+
+                            <format>html</format>
+
+                        </formats>
+
+                    </coverage>
+
+                </configuration>
+
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+
+    <!-- =========================================================
+         DEPENDENCIES
+         ========================================================= -->
+
+    <dependencies>
+
+
+        <!-- HTTP Connector -->
+
+        <dependency>
+
+            <groupId>org.mule.connectors</groupId>
+
+            <artifactId>mule-http-connector</artifactId>
+
+            <version>1.12.1</version>
+
+            <classifier>mule-plugin</classifier>
+
+        </dependency>
+
+
+        <!-- Sockets Connector -->
+
+        <dependency>
+
+            <groupId>org.mule.connectors</groupId>
+
+            <artifactId>mule-sockets-connector</artifactId>
+
+            <version>1.2.9</version>
+
+            <classifier>mule-plugin</classifier>
+
+        </dependency>
+
+
+        <!-- APIKit -->
+
+        <dependency>
+
+            <groupId>org.mule.modules</groupId>
+
+            <artifactId>mule-apikit-module</artifactId>
+
+            <version>1.12.5</version>
+
+            <classifier>mule-plugin</classifier>
+
+        </dependency>
+
+
+        <!-- Database Connector -->
+
+        <dependency>
+
+            <groupId>org.mule.connectors</groupId>
+
+            <artifactId>mule-db-connector</artifactId>
+
+            <version>1.16.4</version>
+
+            <classifier>mule-plugin</classifier>
+
+        </dependency>
+
+
+        <!-- MySQL -->
+
+        <dependency>
+
+            <groupId>mysql</groupId>
+
+            <artifactId>mysql-connector-java</artifactId>
+
+            <version>8.0.30</version>
+
+        </dependency>
+
+
+        <!-- Secure Configuration Properties -->
+
+        <dependency>
+
+            <groupId>com.mulesoft.modules</groupId>
+
+            <artifactId>mule-secure-configuration-property-module</artifactId>
+
+            <version>1.3.2</version>
+
+            <classifier>mule-plugin</classifier>
+
+        </dependency>
+
+
+        <!-- MUnit Runner -->
+
+        <dependency>
+
+            <groupId>com.mulesoft.munit</groupId>
+
+            <artifactId>munit-runner</artifactId>
+
+            <version>3.7.3</version>
+
+            <classifier>mule-plugin</classifier>
+
+            <scope>test</scope>
+
+        </dependency>
+
+
+        <!-- MUnit Tools -->
+
+        <dependency>
+
+            <groupId>com.mulesoft.munit</groupId>
+
+            <artifactId>munit-tools</artifactId>
+
+            <version>3.7.3</version>
+
+            <classifier>mule-plugin</classifier>
+
+            <scope>test</scope>
+
+        </dependency>
+
+
+        <!-- DataWeave Assertions -->
+
+        <dependency>
+
+            <groupId>org.mule.weave</groupId>
+
+            <artifactId>assertions</artifactId>
+
+            <version>1.2.1</version>
+
+            <scope>test</scope>
+
+        </dependency>
+
+    </dependencies>
+
+
+    <!-- =========================================================
+         REPOSITORIES
+         
+         These are used for DOWNLOADING dependencies/plugins.
+         They are different from distributionManagement.
+         ========================================================= -->
+
+    <repositories>
+
+        <repository>
+
+            <id>anypoint-exchange-v3</id>
+
+            <name>Anypoint Exchange</name>
+
+            <url>
+                https://maven.anypoint.mulesoft.com/api/v3/maven
+            </url>
+
+            <layout>default</layout>
+
+        </repository>
+
+
+        <repository>
+
+            <id>mulesoft-releases</id>
+
+            <name>MuleSoft Releases Repository</name>
+
+            <url>
+                https://repository.mulesoft.org/nexus/repository/releases/
+            </url>
+
+            <layout>default</layout>
+
+        </repository>
+
+    </repositories>
+
+
+    <!-- =========================================================
+         PLUGIN REPOSITORIES
+         ========================================================= -->
+
+    <pluginRepositories>
+
+        <pluginRepository>
+
+            <id>mulesoft-releases</id>
+
+            <name>MuleSoft Releases Repository</name>
+
+            <layout>default</layout>
+
+            <url>
+                https://repository.mulesoft.org/nexus/repository/releases/
+            </url>
+
+            <snapshots>
+
+                <enabled>false</enabled>
+
+            </snapshots>
+
+        </pluginRepository>
+
+    </pluginRepositories>
+
 
 </project>
