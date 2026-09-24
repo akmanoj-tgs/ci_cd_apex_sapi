@@ -64,6 +64,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Build deployment artifact
+        run: mvn package -DskipMunitTests
+
       - name: Deploy to CloudHub 2.0
         run: |
             mvn mule:deploy \
