@@ -7,7 +7,7 @@
 	<version>1.0.0</version>
 	<packaging>mule-application</packaging>
 
-	<name>apex-sapi</name>
+	<name>apex-sapi-app</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -42,7 +42,7 @@
 						<environment>${environment}</environment>
 						<muleVersion>${app.runtime}</muleVersion>
 						<target>${target}</target>
-						<applicationName>${applicationName}</applicationName>
+						<applicationName>${app.name}</applicationName>
 						<replicas>1</replicas>
 						<vCores>0.1</vCores>
 					</cloudhub2Deployment>
