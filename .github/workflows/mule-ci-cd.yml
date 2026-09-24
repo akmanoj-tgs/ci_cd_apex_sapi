@@ -74,4 +74,4 @@ jobs:
             -DconnectedAppClientSecret=${{ secrets.ANYPOINT_CLIENT_SECRET }} \
             -Denvironment=${{ secrets.ENVIRONMENT }} \
             -Dtarget=${{ secrets.TARGET }} \
-            -DapplicationName=${{ secrets.APP_NAME }}
+            -Dapp.name=${{ secrets.APP_NAME }}
