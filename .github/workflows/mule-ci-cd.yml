@@ -9,69 +9,85 @@ on:
 
 jobs:
 
-  build-test-package:
+  build-test-deploy:
 
     runs-on: ubuntu-latest
 
     steps:
 
+      # ---------------------------------------------------------
+      # 1. Checkout source code
+      # ---------------------------------------------------------
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Setup Java
+
+      # ---------------------------------------------------------
+      # 2. Setup Java
+      # ---------------------------------------------------------
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+          cache: maven
 
-      - name: Cache Maven Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            maven-
 
-      - name: Build
-        run: mvn clean
+      # ---------------------------------------------------------
+      # 3. Create Maven settings.xml
+      #
+      # This is used to authenticate Maven with Anypoint Exchange.
+      # We DO NOT store the client ID / secret in Git.
+      # ---------------------------------------------------------
+      - name: Configure Maven Authentication
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
 
-      - name: Execute MUnit Tests
-        run: mvn test
-
-      - name: Package Application
-        run: mvn package
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: mule-application
-          path: target/*.jar
-
-  deploy:
-
-    needs: build-test-package
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Checkout Source
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Build deployment artifact
-        run: mvn package -DskipMunitTests
-
-      - name: Deploy to CloudHub 2.0
         run: |
-            mvn package mule:deploy \
-            -DconnectedAppClientId=${{ secrets.ANYPOINT_CLIENT_ID }} \
-            -DconnectedAppClientSecret=${{ secrets.ANYPOINT_CLIENT_SECRET }} \
-            -Denvironment=${{ secrets.ENVIRONMENT }} \
-            -Dtarget=${{ secrets.TARGET }} \
-            -Dapp.name=${{ secrets.APP_NAME }}
+          mkdir -p ~/.m2
+
+          cat > ~/.m2/settings.xml <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0
+                    https://maven.apache.org/xsd/settings-1.2.0.xsd">
+
+            <servers>
+
+              <server>
+                <id>anypoint-exchange-v3</id>
+
+                <username>~~~Client~~~</username>
+
+                <password>${env.ANYPOINT_CLIENT_ID}~?~${env.ANYPOINT_CLIENT_SECRET}</password>
+
+              </server>
+
+            </servers>
+
+          </settings>
+          EOF
+
+
+      # ---------------------------------------------------------
+      # 4. Build, run MUnit, publish to Exchange,
+      #    and deploy to CloudHub 2.0
+      # ---------------------------------------------------------
+      - name: Build Test Publish Deploy
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+          TARGET: ${{ secrets.TARGET }}
+          APP_NAME: ${{ secrets.APP_NAME }}
+
+        run: |
+          mvn -B -ntp clean deploy -DmuleDeploy \
+            -DconnectedAppClientId="$ANYPOINT_CLIENT_ID" \
+            -DconnectedAppClientSecret="$ANYPOINT_CLIENT_SECRET" \
+            -Denvironment="$ENVIRONMENT" \
+            -Dtarget="$TARGET" \
+            -Dapp.name="$APP_NAME"
