@@ -42,7 +42,7 @@
 						<environment>${environment}</environment>
 						<muleVersion>${app.runtime}</muleVersion>
 						<target>${target}</target>
-						<applicationName>${app.name}</applicationName>
+						<applicationName>${applicationName}</applicationName>
 						<replicas>1</replicas>
 						<vCores>0.1</vCores>
 					</cloudhub2Deployment>
