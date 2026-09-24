@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>b8e657ef-106e-4cdc-aad5-e2050ef60266</groupId>
-	<artifactId>apex-sapi</artifactId>
+	<artifactId>apex-sapi-app</artifactId>
 	<version>1.0.0</version>
 	<packaging>mule-application</packaging>
 
