@@ -7,24 +7,45 @@ on:
 
   workflow_dispatch:
 
+
 jobs:
 
   build-test-publish-deploy:
 
     runs-on: ubuntu-latest
 
+    # =========================================================
+    # ENVIRONMENT VARIABLES
+    #
+    # These are available to ALL steps in this job.
+    # =========================================================
+    env:
+
+      ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+
+      ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+
+      ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+
+      TARGET: ${{ secrets.TARGET }}
+
+      APP_NAME: ${{ secrets.APP_NAME }}
+
+
     steps:
 
-      # ---------------------------------------------------------
-      # 1. Checkout source
-      # ---------------------------------------------------------
+      # =======================================================
+      # 1. Checkout source code
+      # =======================================================
+
       - name: Checkout Source
         uses: actions/checkout@v4
 
 
-      # ---------------------------------------------------------
+      # =======================================================
       # 2. Setup Java 17
-      # ---------------------------------------------------------
+      # =======================================================
+
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -33,19 +54,22 @@ jobs:
           cache: maven
 
 
-            # ---------------------------------------------------------
-      # 3. Configure Maven authentication for Exchange
-      # ---------------------------------------------------------
-      - name: Configure Maven Authentication
-        env:
-          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
-          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+      # =======================================================
+      # 3. Create Maven settings.xml
+      #
+      # IMPORTANT:
+      # The environment variables are now available to this
+      # step AND to all following steps because they are defined
+      # at job level.
+      # =======================================================
 
+      - name: Configure Maven Authentication
         run: |
 
           mkdir -p ~/.m2
 
           cat > ~/.m2/settings.xml <<'EOF'
+
           <?xml version="1.0" encoding="UTF-8"?>
 
           <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
@@ -57,25 +81,29 @@ jobs:
             <servers>
 
               <server>
+
                 <id>anypoint-exchange-v3</id>
+
                 <username>~~~Client~~~</username>
+
                 <password>${env.ANYPOINT_CLIENT_ID}~?~${env.ANYPOINT_CLIENT_SECRET}</password>
+
               </server>
 
             </servers>
 
           </settings>
+
           EOF
 
 
-      # ---------------------------------------------------------
-      # 4. Verify Maven configuration
-      # ---------------------------------------------------------
-      - name: Verify Maven Configuration
-        env:
-          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
-          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+      # =======================================================
+      # 4. Verify settings.xml
+      #
+      # This does NOT print the actual credentials.
+      # =======================================================
 
+      - name: Verify Maven Configuration
         run: |
 
           echo "Checking Maven settings file..."
@@ -85,50 +113,101 @@ jobs:
           echo "settings.xml exists"
 
           echo
-          echo "Exchange server configuration:"
+          echo "Checking Exchange server configuration..."
 
           grep -A4 -B1 "anypoint-exchange-v3" ~/.m2/settings.xml
 
           echo
-          echo "Client ID length:"
+          echo "Client ID is configured:"
 
-          echo -n "$ANYPOINT_CLIENT_ID" | wc -c
+          if [ -n "$ANYPOINT_CLIENT_ID" ]; then
+            echo "YES"
+          else
+            echo "NO"
+            exit 1
+          fi
 
           echo
-          echo "Client Secret length:"
+          echo "Client Secret is configured:"
 
-          echo -n "$ANYPOINT_CLIENT_SECRET" | wc -c
+          if [ -n "$ANYPOINT_CLIENT_SECRET" ]; then
+            echo "YES"
+          else
+            echo "NO"
+            exit 1
+          fi
 
 
-      # ---------------------------------------------------------
-      # 5. Verify effective Maven settings
-      # ---------------------------------------------------------
-      - name: Verify Effective Maven Settings
+      # =======================================================
+      # 5. Validate Connected App credentials directly
+      #
+      # This removes guesswork.
+      #
+      # If this fails, the problem is the Connected App
+      # credentials themselves.
+      # =======================================================
+
+      - name: Validate Anypoint Connected App
         run: |
 
-          mvn -B help:effective-settings -DshowPasswords=false
+          echo "Validating Connected App credentials..."
+
+          HTTP_STATUS=$(curl \
+            --silent \
+            --show-error \
+            --output /tmp/anypoint-token-response.json \
+            --write-out "%{http_code}" \
+            --request POST \
+            "https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token" \
+            --header "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "client_id=${ANYPOINT_CLIENT_ID}" \
+            --data-urlencode "client_secret=${ANYPOINT_CLIENT_SECRET}" \
+            --data-urlencode "grant_type=client_credentials")
+
+          echo "HTTP status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+
+            echo "Connected App authentication FAILED."
+
+            cat /tmp/anypoint-token-response.json
+
+            exit 1
+
+          fi
+
+          if grep -q '"access_token"' /tmp/anypoint-token-response.json; then
+
+            echo "Connected App authentication SUCCESSFUL."
+
+          else
+
+            echo "Token was not returned."
+
+            cat /tmp/anypoint-token-response.json
+
+            exit 1
+
+          fi
 
 
-      # ---------------------------------------------------------
-      # 6. Publish Mule Application to Anypoint Exchange
-      # ---------------------------------------------------------
+      # =======================================================
+      # 6. Publish application to Anypoint Exchange
+      #
+      # DO NOT use -DmuleDeploy here.
+      # =======================================================
+
       - name: Publish to Anypoint Exchange
         run: |
 
           mvn -B -ntp clean deploy
 
 
-      # ---------------------------------------------------------
-      # 7. Deploy to CloudHub 2.0
-      # ---------------------------------------------------------
-      - name: Deploy to CloudHub 2.0
-        env:
-          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
-          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
-          TARGET: ${{ secrets.TARGET }}
-          APP_NAME: ${{ secrets.APP_NAME }}
+      # =======================================================
+      # 7. Deploy published application to CloudHub 2.0
+      # =======================================================
 
+      - name: Deploy to CloudHub 2.0
         run: |
 
           mvn -B -ntp mule:deploy \
