@@ -5,7 +5,7 @@ http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/sc
 <configuration-properties
     file="properties.yaml" />
     <http:listener-config name="apex-order-system-sapi-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8092" />
+        <http:listener-connection host="0.0.0.0" port="${http.port}" />
     </http:listener-config>
     <apikit:config name="apex-order-system-sapi-config" api="apex-order-system-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <http:request-config name="SAPI_HTTP_Request_Config" doc:name="HTTP Request configuration" doc:id="49a81ec1-1cdd-44c5-b98c-5277d3ce54eb" >
