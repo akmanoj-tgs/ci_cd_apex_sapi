@@ -33,7 +33,7 @@ jobs:
           cache: maven
 
 
-      # ---------------------------------------------------------
+            # ---------------------------------------------------------
       # 3. Configure Maven authentication for Exchange
       # ---------------------------------------------------------
       - name: Configure Maven Authentication
@@ -57,13 +57,9 @@ jobs:
             <servers>
 
               <server>
-
                 <id>anypoint-exchange-v3</id>
-
                 <username>~~~Client~~~</username>
-
                 <password>${env.ANYPOINT_CLIENT_ID}~?~${env.ANYPOINT_CLIENT_SECRET}</password>
-
               </server>
 
             </servers>
@@ -72,42 +68,58 @@ jobs:
           EOF
 
 
+      # ---------------------------------------------------------
+      # 4. Verify Maven configuration
+      # ---------------------------------------------------------
       - name: Verify Maven Configuration
         env:
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
-    
+
         run: |
+
           echo "Checking Maven settings file..."
+
           test -f ~/.m2/settings.xml
+
           echo "settings.xml exists"
-      
+
           echo
           echo "Exchange server configuration:"
+
           grep -A4 -B1 "anypoint-exchange-v3" ~/.m2/settings.xml
-      
+
           echo
           echo "Client ID length:"
+
           echo -n "$ANYPOINT_CLIENT_ID" | wc -c
-      
+
           echo
           echo "Client Secret length:"
+
           echo -n "$ANYPOINT_CLIENT_SECRET" | wc -c
-      
-            # ---------------------------------------------------------
-            # 4. Publish Mule Application to Anypoint Exchange
-            #
-            # IMPORTANT:
-            # Do NOT use -DmuleDeploy here.
-            # ---------------------------------------------------------
-            - name: Publish to Anypoint Exchange
-              run: |
-                mvn -B -ntp clean deploy
 
 
       # ---------------------------------------------------------
-      # 5. Deploy the already-published application
-      #    to CloudHub 2.0
+      # 5. Verify effective Maven settings
+      # ---------------------------------------------------------
+      - name: Verify Effective Maven Settings
+        run: |
+
+          mvn -B help:effective-settings -DshowPasswords=false
+
+
+      # ---------------------------------------------------------
+      # 6. Publish Mule Application to Anypoint Exchange
+      # ---------------------------------------------------------
+      - name: Publish to Anypoint Exchange
+        run: |
+
+          mvn -B -ntp clean deploy
+
+
+      # ---------------------------------------------------------
+      # 7. Deploy to CloudHub 2.0
       # ---------------------------------------------------------
       - name: Deploy to CloudHub 2.0
         env:
