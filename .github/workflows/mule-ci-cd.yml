@@ -72,15 +72,37 @@ jobs:
           EOF
 
 
-      # ---------------------------------------------------------
-      # 4. Publish Mule Application to Anypoint Exchange
-      #
-      # IMPORTANT:
-      # Do NOT use -DmuleDeploy here.
-      # ---------------------------------------------------------
-      - name: Publish to Anypoint Exchange
+      - name: Verify Maven Configuration
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+    
         run: |
-          mvn -B -ntp clean deploy
+          echo "Checking Maven settings file..."
+          test -f ~/.m2/settings.xml
+          echo "settings.xml exists"
+      
+          echo
+          echo "Exchange server configuration:"
+          grep -A4 -B1 "anypoint-exchange-v3" ~/.m2/settings.xml
+      
+          echo
+          echo "Client ID length:"
+          echo -n "$ANYPOINT_CLIENT_ID" | wc -c
+      
+          echo
+          echo "Client Secret length:"
+          echo -n "$ANYPOINT_CLIENT_SECRET" | wc -c
+      
+            # ---------------------------------------------------------
+            # 4. Publish Mule Application to Anypoint Exchange
+            #
+            # IMPORTANT:
+            # Do NOT use -DmuleDeploy here.
+            # ---------------------------------------------------------
+            - name: Publish to Anypoint Exchange
+              run: |
+                mvn -B -ntp clean deploy
 
 
       # ---------------------------------------------------------
